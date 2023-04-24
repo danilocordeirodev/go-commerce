@@ -10,11 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
 func DBSet() *mongo.Client {
 
 	client, err := mongo.NewClient(
-		options.Client().ApplyURI("mongodb://localhost:27017")
+		options.Client().ApplyURI("mongodb://localhost:27017"),
 	)
 
 	if err != nil {
@@ -43,11 +42,12 @@ func DBSet() *mongo.Client {
 
 var Client *mongo.Client = DBSet()
 
-
 func UserData(client *mongo.Client, collectionName string) *mongo.Collection {
-
+	var collection *mongo.Collection = client.Database("ecommerce").Collection(collectionName)
+	return collection
 }
 
 func ProductData(client *mongo.Client, collectionName string) *mongo.Collection {
-
+	var collection *mongo.Collection = client.Database("ecommerce").Collection(collectionName)
+	return collection
 }
