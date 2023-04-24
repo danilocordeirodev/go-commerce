@@ -20,7 +20,7 @@ type User struct {
 	User_ID         string             `json:"user_id"`
 	UserCart        []ProductUser      `json:"usercart" bson:"usercart"`
 	Address_Details []Address          `json:"address" bson:"address"`
-	Order_Status    []Order            `json:"phone" bson:"orders"`
+	Order_Status    []Order            `json:"orders" bson:"orders"`
 }
 
 type Product struct {
