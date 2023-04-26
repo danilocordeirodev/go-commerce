@@ -95,7 +95,7 @@ func SignUp() gin.HandlerFunc {
 		user.Address_Details = make([]models.Address, 0)
 		user.Order_Status = make([]models.Order, 0)
 
-		_, inserterr : = UserCollection.InsertOne(ctx, user)
+		_, inserterr := UserCollection.InsertOne(ctx, user)
 		if inserterr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error":"the user did not get created"})
 			return
@@ -161,7 +161,7 @@ func SearchProduct() gin.HandlerFunc {
 			c.IndentedJSON(http.StatusInternalServerError, "something went wrong, please try after some time")
 		}
 
-		err = cursor.All(ctx, %productList)
+		err = cursor.All(ctx, &productList)
 
 		if err != nil {
 			log.Println(err)
@@ -169,7 +169,7 @@ func SearchProduct() gin.HandlerFunc {
 			return
 		}
 
-		defer cursor.Close()
+		defer cursor.Close(ctx)
 
 		if err := cursor.Err(); err != nil {
 			log.Println(err)
@@ -185,5 +185,47 @@ func SearchProduct() gin.HandlerFunc {
 }
 
 func SearchProductByQuery() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var searchProducts []models.Product
+		queryParam := c.Query("name")
+
+		if queryParam == "" {
+			log.Println("query is empty")
+			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, gin.H{"error":"Invalid search index"})
+			c.Abort()
+			return
+		}
+
+		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+		defer cancel()
+
+		searchquerydb, err := ProductCollection.Find(ctx, bson.M{"product_name": bson.M{"$regex":queryParam}})
+
+		if err != nil {
+			c.IndentedJSON(404, "something went wrong, while fetching the data")
+			return
+		}
+
+		err = searchquerydb.All(ctx, &searchProducts)
+
+		if err != nil {
+			log.Println(err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		defer searchquerydb.Close(ctx)
+
+		if err := searchquerydb.Err(); err != nil {
+			log.Println(err)
+			c.IndentedJSON(400, "invalid request")
+			return
+		}
+
+		defer cancel()
+
+		c.IndentedJSON(200, searchProducts)
+	}
 
 }
