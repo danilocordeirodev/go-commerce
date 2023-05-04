@@ -75,7 +75,6 @@ func AddAddress() gin.HandlerFunc {
 		ctx.Done()
 
 	}
-
 }
 
 func EditHomeAddress() gin.HandlerFunc {
