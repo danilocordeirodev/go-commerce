@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/text/search"
 )
 
 var (
@@ -29,7 +28,7 @@ func AddProductToCart(ctx context.Context, productCollection, userCollection *mo
 		return ErrCantFindProduct
 	}
 
-	var productCart [] models.ProductUser
+	var productCart []models.ProductUser
 	err = searchfromdb.All(ctx, &productCart)
 	if err != nil {
 		log.Println(err)
@@ -43,7 +42,7 @@ func AddProductToCart(ctx context.Context, productCollection, userCollection *mo
 	}
 
 	filter := bson.D{primitive.E{Key: "_id", Value: id}}
-	update := bson.D{{Key: "$push", Value: bson.D{primitive.E{Key: "usercart", Value: bson.D{{Key:"$each", Value: productCart}}}}}}
+	update := bson.D{{Key: "$push", Value: bson.D{primitive.E{Key: "usercart", Value: bson.D{{Key: "$each", Value: productCart}}}}}}
 
 	_, err = userCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -53,8 +52,22 @@ func AddProductToCart(ctx context.Context, productCollection, userCollection *mo
 	return nil
 }
 
-func RemoveCartItem() {
+func RemoveCartItem(ctx context.Context, productCollection, userCollection *mongo.Collection, productID primitive.ObjectID, userID string) error {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Println(err)
+		return ErrUserIdIsNotValid
+	}
 
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	update := bson.M{"$pull": bson.M{"usercart": bson.M{"_id": productID}}}
+
+	_, err = userCollection.UpdateMany(ctx, filter, update)
+	if err != nil {
+		return ErrCantRemoveItemCart
+	}
+
+	return nil
 }
 
 func BuyItemFromCart() {
