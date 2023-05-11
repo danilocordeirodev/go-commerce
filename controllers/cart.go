@@ -178,7 +178,7 @@ func (app *Application) BuyFromCart() gin.HandlerFunc {
 
 }
 
-func (app *Application) IntantBuy() gin.HandlerFunc {
+func (app *Application) InstantBuy() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productQueryID := c.Query("id")
 		if productQueryID == "" {
